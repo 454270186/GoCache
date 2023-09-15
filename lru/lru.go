@@ -13,5 +13,25 @@ type Cache struct {
 }
 
 func New(maxBytes int64, onDelete func(key string, val list.Value)) *Cache {
-	return nil
+	return &Cache{
+		maxBytes: maxBytes,
+		l: list.New(),
+		onDelete: onDelete,
+	}
+}
+
+func (c *Cache) Get(Key string) (list.Value, bool) {
+	return nil, true
+}
+
+func (c *Cache) Add(key string, val list.Value) {
+
+}
+
+func (c *Cache) RemoveOldest() {
+
+}
+
+func (c *Cache) Len() int {
+	return 0
 }

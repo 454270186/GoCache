@@ -26,3 +26,23 @@ func New() *List {
 		tail: t,
 	}
 }
+
+func (l *List) Len() int {
+	return l.size
+}
+
+func (l *List) Add(node *Element) {
+
+}
+
+func (l *List) Remove(node *Element) {
+
+}
+
+func (l *List) RemoveHead() {
+
+}
+
+func (l *List) MoveToTail(node *Element) {
+	
+}

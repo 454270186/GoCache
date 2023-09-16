@@ -30,6 +30,10 @@ func (c *cache) get(key string) (string, bool) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
+	if c.lruCache == nil {
+		c.lruCache = lru.New(c.cacheBytes, nil)
+	}
+
 	if v, ok := c.lruCache.Get(key); ok {
 		return v, true
 	}

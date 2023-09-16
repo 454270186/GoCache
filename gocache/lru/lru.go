@@ -1,6 +1,6 @@
 package lru
 
-import "gocache/list"
+import "github.com/454270186/GoCache/gocache/list"
 
 type Cache struct {
 	maxBytes int64

@@ -1,2 +1,2 @@
 ## GoCache
-a simple distributed Cache
+a simple distributed cache

@@ -10,7 +10,7 @@ type List struct {
 
 type Element struct {
 	Key       string
-	Val       interface{}
+	Val       string
 	Pre, Next *Element
 }
 
@@ -59,6 +59,14 @@ func (l *List) RemoveHead() {
 func (l *List) MoveToTail(node *Element) {
 	l.Remove(node)
 	l.Add(node)
+}
+
+func (l *List) GetFirst() *Element {
+	if l.Len() <= 1 {
+		panic("list is empty")
+	}
+
+	return l.head.Next
 }
 
 func (l *List) Print() {

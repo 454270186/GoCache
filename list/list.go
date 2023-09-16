@@ -1,5 +1,7 @@
 package list
 
+import "fmt"
+
 type List struct {
 	head *Element
 	tail *Element
@@ -8,12 +10,8 @@ type List struct {
 
 type Element struct {
 	Key       string
-	Val       Value
+	Val       interface{}
 	Pre, Next *Element
-}
-
-type Value interface {
-	Len()
 }
 
 func New() *List {
@@ -32,17 +30,45 @@ func (l *List) Len() int {
 }
 
 func (l *List) Add(node *Element) {
+	last := l.tail.Pre
+	last.Next = node
+	node.Pre = last
+	node.Next = l.tail
+	l.tail.Pre = node
 
+	l.size++
 }
 
 func (l *List) Remove(node *Element) {
+	pre := node.Pre
+	next := node.Next
+	pre.Next = next
+	next.Pre = pre
 
+	l.size--
 }
 
 func (l *List) RemoveHead() {
+	if l.size <= 0 {
+		return
+	}
 
+	l.Remove(l.head.Next)
 }
 
 func (l *List) MoveToTail(node *Element) {
-	
+	l.Remove(node)
+	l.Add(node)
+}
+
+func (l *List) Print() {
+	cur := l.head.Next
+
+	for cur != l.tail {
+		fmt.Print("<", cur.Key,", ", cur.Val, ">")
+		fmt.Print(" ")
+		cur = cur.Next
+	}
+
+	fmt.Println()
 }

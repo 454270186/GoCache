@@ -55,13 +55,16 @@ func (g *Group) Get(key string) (string, error) {
 	}
 	
 	if v, ok := g.mainCache.get(key); ok {
-		log.Println("[cache hit!!]")
+		log.Println("[GoCache] hit")
 		return v, nil
 	}
 
 	return g.load(key)
 }
 
+// load() will try to get data from other data source;
+// First try to get from peer cache [to be done];
+// Finally get data locally;
 func (g *Group) load(key string) (string, error) {
 	return g.getLocally(key)
 }

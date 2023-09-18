@@ -72,7 +72,7 @@ func (g *Group) RegisterPeers(peers PeerPicker) {
 }
 
 // load() will try to get data from other data source;
-// First try to get from peer cache [to be done];
+// First try to get from peer cache;
 // Finally get data locally;
 func (g *Group) load(key string) (string, error) {
 	if g.peers != nil {

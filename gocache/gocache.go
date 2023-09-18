@@ -9,17 +9,18 @@ import (
 // Callback Func for load data from remote source
 type GetterFunc func(key string) (string, error)
 
-/* 
-	Group
+/*
+Group
 */
 type Group struct {
-	name string
-	getter GetterFunc
+	name      string
+	getter    GetterFunc
 	mainCache cache
+	peers     PeerPicker
 }
 
 var (
-	mu sync.RWMutex
+	mu     sync.RWMutex
 	groups = make(map[string]*Group)
 )
 
@@ -27,12 +28,12 @@ func NewGroup(name string, cacheBytes int64, getter GetterFunc) *Group {
 	if getter == nil {
 		panic("Getter func is nil")
 	}
-	
+
 	mu.Lock()
 	defer mu.Unlock()
 
 	g := &Group{
-		name: name,
+		name:   name,
 		getter: getter,
 		mainCache: cache{
 			cacheBytes: cacheBytes,
@@ -53,7 +54,7 @@ func (g *Group) Get(key string) (string, error) {
 	if key == "" {
 		return "", errors.New("key cannot be empty")
 	}
-	
+
 	if v, ok := g.mainCache.get(key); ok {
 		log.Println("[GoCache] hit")
 		return v, nil
@@ -62,10 +63,28 @@ func (g *Group) Get(key string) (string, error) {
 	return g.load(key)
 }
 
+func (g *Group) RegisterPeers(peers PeerPicker) {
+	if g.peers != nil {
+		panic("Call RegisterPeers() more than once")
+	}
+
+	g.peers = peers
+}
+
 // load() will try to get data from other data source;
 // First try to get from peer cache [to be done];
 // Finally get data locally;
 func (g *Group) load(key string) (string, error) {
+	if g.peers != nil {
+		if peer, ok := g.peers.PickPeer(key); ok {
+			v, err := peer.Get(g.name, key)
+			if err == nil {
+				return v, nil
+			}
+			log.Println("error while get data from peer:", err.Error())
+		}
+	}
+
 	return g.getLocally(key)
 }
 
@@ -83,5 +102,3 @@ func (g *Group) getLocally(key string) (string, error) {
 func (g *Group) populateCache(key, val string) {
 	g.mainCache.add(key, val)
 }
-
-

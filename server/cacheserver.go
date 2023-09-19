@@ -10,7 +10,7 @@ import (
 
 // use as DB for testing
 var db = map[string]string{
-	"xiaofei": "100",
+	// "xiaofei": "100",
 	"dafei":   "500",
 	"yuerfei": "250",
 }

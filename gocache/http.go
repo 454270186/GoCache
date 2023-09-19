@@ -18,6 +18,7 @@ const (
 )
 
 var _ PeerPicker = (*HTTPPool)(nil)
+
 type HTTPPool struct {
 	selfAddr    string
 	basePath    string
@@ -28,8 +29,9 @@ type HTTPPool struct {
 
 func NewHTTPPool(addr string) *HTTPPool {
 	return &HTTPPool{
-		selfAddr: addr,
-		basePath: DefaultBasePath,
+		selfAddr:    addr,
+		basePath:    DefaultBasePath,
+		httpGetters: make(map[string]*httpGetter),
 	}
 }
 
@@ -74,7 +76,7 @@ func (h *HTTPPool) Set(addrs ...string) {
 	h.peers = consistenthash.New(DefaultReplicas, nil)
 	h.peers.Add(addrs...)
 	for _, addr := range addrs {
-		h.httpGetters[addr] = &httpGetter{baseURL: addr}
+		h.httpGetters[addr] = &httpGetter{baseURL: addr + DefaultBasePath}
 	}
 }
 
@@ -92,6 +94,7 @@ func (h *HTTPPool) PickPeer(key string) (peer PeerGetter, ok bool) {
 }
 
 var _ PeerGetter = (*httpGetter)(nil)
+
 type httpGetter struct {
 	baseURL string // the address of remote peer
 }

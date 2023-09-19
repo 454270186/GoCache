@@ -112,6 +112,7 @@ func (h *httpGetter) Get(group, key string) (string, error) {
 	if err != nil {
 		return "", err
 	}
+	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
 		return "", fmt.Errorf("Server return %s", resp.Status)

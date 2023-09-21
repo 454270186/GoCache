@@ -13,6 +13,10 @@ var db = map[string]string{
 	"xiaofei": "100",
 	"dafei":   "500",
 	"yuerfei": "250",
+	"1": "1",
+	"123": "123",
+	"sb": "sb",
+	"shshsh": "shshsh",
 }
 
 var AddrMap = map[int]string{

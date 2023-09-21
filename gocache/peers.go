@@ -7,3 +7,7 @@ type PeerPicker interface {
 type PeerGetter interface {
 	Get(group, key string) (string, error)
 }
+
+type PeerPutter interface {
+	Put(group, key, val string) error
+}

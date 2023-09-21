@@ -54,6 +54,18 @@ func GetGroup(name string) *Group {
 	return g
 }
 
+func (g *Group) Name() string {
+	return g.name
+}
+
+func (g *Group) Put(key, val string) error {
+	if key == "" {
+		return errors.New("key cannot be empty")
+	}
+
+	return nil
+}
+
 func (g *Group) Get(key string) (string, error) {
 	if key == "" {
 		return "", errors.New("key cannot be empty")
@@ -110,6 +122,13 @@ func (g *Group) getLocally(key string) (string, error) {
 	return v, nil
 }
 
+//Add K-V
+
+// populateCache() add a K-V in local cache
 func (g *Group) populateCache(key, val string) {
 	g.mainCache.add(key, val)
+}
+
+func (g *Group) populatePeerCache(key, val string) {
+
 }

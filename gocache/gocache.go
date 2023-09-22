@@ -63,6 +63,21 @@ func (g *Group) Put(key, val string) error {
 		return errors.New("key cannot be empty")
 	}
 
+	if g.peers == nil {
+		g.populateCache(key, val)
+	} else {
+		if _, peer, ok := g.peers.PickPeer(key); ok {
+			err := peer.Put(g.name, key, val)
+			if err != nil {
+				log.Println("error while put data to peer:", err.Error())
+				return err
+			}
+		} else {
+			log.Println("error while get peer or the peer is self, add locally")
+			g.populateCache(key, val)			
+		}
+	}
+
 	return nil
 }
 
@@ -93,7 +108,7 @@ func (g *Group) RegisterPeers(peers PeerPicker) {
 func (g *Group) load(key string) (string, error) {
 	v, err := g.loader.Do(key, func() (interface{}, error) {
 		if g.peers != nil {
-			if peer, ok := g.peers.PickPeer(key); ok {
+			if peer, _, ok := g.peers.PickPeer(key); ok {
 				v, err := peer.Get(g.name, key)
 				if err == nil {
 					return v, nil

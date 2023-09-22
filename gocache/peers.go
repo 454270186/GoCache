@@ -1,7 +1,7 @@
 package gocache
 
 type PeerPicker interface {
-	PickPeer(key string) (peer PeerGetter, ok bool)
+	PickPeer(key string) (peerGetter PeerGetter, peerPutter PeerPutter, ok bool)
 }
 
 type PeerGetter interface {

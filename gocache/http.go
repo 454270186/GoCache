@@ -97,6 +97,8 @@ func (p *HTTPPool) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
+		p.Log("[Put] Put <%s -- %s>", key, val)
+		w.Write([]byte("Successfully put new k-v"))
 	}
 }
 
@@ -114,16 +116,16 @@ func (h *HTTPPool) Set(addrs ...string) {
 }
 
 // PickPeer() tries to pick a peer from hash ring according to given key
-func (h *HTTPPool) PickPeer(key string) (peer PeerGetter, ok bool) {
+func (h *HTTPPool) PickPeer(key string) (peerGetter PeerGetter, peerPutter PeerPutter, ok bool) {
 	h.mu.Lock()
 	defer h.mu.Unlock()
 
 	if peerAddr := h.peers.Get(key); peerAddr != "" && peerAddr != h.selfAddr {
 		h.Log("Pick peer %s", peerAddr)
-		return h.httpGetters[peerAddr], true
+		return h.httpGetters[peerAddr], h.httpPutters[peerAddr], true
 	}
 
-	return nil, false
+	return nil, nil, false
 }
 
 var _ PeerGetter = (*httpGetter)(nil)
@@ -172,7 +174,7 @@ func (h *httpPutter) Put(group, key, val string) error {
 		url.QueryEscape(val),
 	)
 
-	resp, err := http.Get(peerURL)
+	resp, err := http.Post(peerURL, "", nil)
 	if err != nil {
 		return err
 	}

@@ -14,15 +14,12 @@ a simple distributed cache
 package main
 
 import (
-	"fmt"
-
 	gcache "github.com/454270186/GoCache/api"
 )
 
 func main() {
 	g := gcache.NewGoCache()
 	g.Put("xiaofei", "100")
-	val, _ := g.Get("xiaofei")
-	fmt.Println(val)
+	val, _ := g.Get("xiaofei") // val ==> 100
 }
 ```

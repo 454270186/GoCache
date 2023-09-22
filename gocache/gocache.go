@@ -28,10 +28,6 @@ var (
 )
 
 func NewGroup(name string, cacheBytes int64, getter GetterFunc) *Group {
-	if getter == nil {
-		panic("Getter func is nil")
-	}
-
 	mu.Lock()
 	defer mu.Unlock()
 
@@ -134,6 +130,10 @@ func (g *Group) load(key string) (string, error) {
 
 // getLocally() calls the Getter callback func to get data
 func (g *Group) getLocally(key string) (string, error) {
+	if g.getter == nil {
+		return "", nil
+	}
+	
 	v, err := g.getter(key)
 	if err != nil {
 		return "", err

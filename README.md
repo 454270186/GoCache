@@ -23,3 +23,27 @@ func main() {
 	val, _ := g.Get("xiaofei") // val ==> 100
 }
 ```
+
+You can also store the data in specific group
+
+```go
+package main
+
+import (
+	gcache "github.com/454270186/GoCache/api"
+)
+
+func main() {
+	g := gcache.NewGoCache()
+
+	g.NewGroup("people", 20)
+	g.PutWithGroup("people", "xiaofei", "1")
+	g.NewGroup("student", 20)
+	g.PutWithGroup("student", "xiaofei", "100")
+
+	val1, _ := g.GetWithGroup("people", "xiaofei")  // val1 ==> 1
+	val2, _ := g.GetWithGroup("student", "xiaofei") // val2 ==> 100
+}
+```
+
+PS: If dont specify a group, the data will store in "base" group

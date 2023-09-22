@@ -54,6 +54,12 @@ func GetGroup(name string) *Group {
 	return g
 }
 
+func AddGroup(name string, g *Group) {
+	mu.Lock()
+	groups[name] = g
+	mu.Unlock()
+}
+
 func (g *Group) Name() string {
 	return g.name
 }

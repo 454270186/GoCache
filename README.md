@@ -87,5 +87,5 @@ PeerPicker works
 2023/09/24 11:43:49 [Server ] Pick peer http://0.0.0.0:8003
 2023/09/24 11:43:49 [Put] Put <dafei -- 456>
 2023/09/24 11:43:49 [Server ] Pick peer http://0.0.0.0:8002
-456
+123
 ```

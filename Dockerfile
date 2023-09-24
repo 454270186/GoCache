@@ -1,8 +1,13 @@
-FROM golang:1.20
+FROM golang:1.21
 
 WORKDIR /app
 
-COPY go.mod go.sum ./
-COPY gocache server main.go ./
+COPY . .
 
-RUN go build -o /docker-gocache
+RUN go build -o docker-gocache main.go
+
+ENV PORT=8001
+
+ENV isAPI=false
+
+CMD [ "./docker-gocache" ]

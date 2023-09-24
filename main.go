@@ -1,18 +1,21 @@
 package main
 
 import (
-	"flag"
+	"os"
+	"strconv"
+
 	"github.com/454270186/GoCache/server"
 )
 
 const apiAddr = "127.0.0.1:8080"
 
 func main() {
-	var port int
-	var isAPI bool
-	flag.IntVar(&port, "port", 8001, "port of cache server")
-	flag.BoolVar(&isAPI, "api", false, "")
-	flag.Parse()
+	portStr := os.Getenv("PORT")
+	port, err := strconv.Atoi(portStr)
+	if err != nil {
+		port = 8001
+	}
+	isAPI := true
 
 	g := server.InitGroup()
 

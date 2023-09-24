@@ -8,6 +8,13 @@ a simple distributed cache
 - 使用singleflight合并高并发的相同请求，防止缓存击穿
 - 支持docker水平部署节点
 
+### Getting GoCache
+```bash
+docker pull erfeiyu/go-cache
+
+docker run -e PORT=8002 -p 8002:8002 erfeiyu/go-cache  # run a cache node in http://0.0.0.0:8002
+```
+
 ### Usage
 
 #### Single node
@@ -48,3 +55,37 @@ func main() {
 ```
 
 PS: If dont specify a group, the data will store in "base" group
+
+
+#### Multi nodes
+```go
+package main
+
+import (
+	"fmt"
+
+	gcache "github.com/454270186/GoCache/api"
+)
+
+func main() {
+	g := gcache.NewGoCache(
+		"http://0.0.0.0:8002",
+		"http://0.0.0.0:8003",
+	)
+	g.Put("xiaofei", "123")
+	g.Put("dafei", "456")
+	val, _ := g.Get("xiaofei") // val ==> 123
+}
+```
+
+**Output**
+
+PeerPicker works
+```
+2023/09/24 11:43:49 [Server ] Pick peer http://0.0.0.0:8002
+2023/09/24 11:43:49 [Put] Put <xiaofei -- 123>
+2023/09/24 11:43:49 [Server ] Pick peer http://0.0.0.0:8003
+2023/09/24 11:43:49 [Put] Put <dafei -- 456>
+2023/09/24 11:43:49 [Server ] Pick peer http://0.0.0.0:8002
+456
+```

@@ -10,7 +10,7 @@ a simple distributed cache
 
 ### Getting GoCache
 ```bash
-docker pull erfeiyu/go-cache
+docker pull erfeiyu/go-cache:protobuf
 
 docker run -e PORT=8002 -p 8002:8002 erfeiyu/go-cache:protobuf  # run a cache node in http://0.0.0.0:8002
 ```

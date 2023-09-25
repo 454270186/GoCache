@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
+	"strconv"
 
 	"github.com/454270186/GoCache/gocache"
 )
@@ -31,6 +33,8 @@ var Addrs = []string{
 	// "http://0.0.0.0:8003",
 }
 
+const apiAddr = "127.0.0.1:8080"
+
 func RunCacheServer(serverAddr string, peerAddrs []string, group *gocache.Group) {
 	peers := gocache.NewHTTPPool(serverAddr)
 	peers.Set(peerAddrs...)
@@ -54,4 +58,20 @@ func InitGroup() *gocache.Group {
 	})
 
 	return g
+}
+
+func CacheServerMain() {
+	portStr := os.Getenv("PORT")
+	port, err := strconv.Atoi(portStr)
+	if err != nil {
+		port = 8001
+	}
+	isAPI := true
+
+	g := InitGroup()
+
+	if isAPI {
+		go RunAPIServer(apiAddr, g)
+	}
+	RunCacheServer(AddrMap[port], Addrs, g)
 }

@@ -1,0 +1,30 @@
+syntax = "proto3";
+
+package gocachepb;
+
+option go_package = "/gocachepb";
+
+message GetRequest {
+    string Group = 1;
+    string Key = 2;
+}
+
+message GetResponse {
+    int32 StatusCode = 1;
+    string Value = 2;
+}
+
+message PutRequest {
+    string Group = 1;
+    string Key = 2;
+    string Value = 3;
+}
+
+message PutResponse {
+    int32 StatusCode = 1;
+}
+
+service GoCache {
+    rpc Get (GetRequest) returns (GetResponse);
+    rpc Put (PutRequest) returns (PutResponse);
+}

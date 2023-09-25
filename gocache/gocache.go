@@ -143,13 +143,12 @@ func (g *Group) getLocally(key string) (string, error) {
 	return v, nil
 }
 
-//Add K-V
+func (g *Group) getFromPeer(peer PeerGetter, key string) (string, error) {
+	return "to be done", nil
+}
 
+//Add K-V
 // populateCache() add a K-V in local cache
 func (g *Group) populateCache(key, val string) {
 	g.mainCache.add(key, val)
-}
-
-func (g *Group) populatePeerCache(key, val string) {
-
 }

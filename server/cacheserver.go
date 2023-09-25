@@ -27,12 +27,6 @@ var AddrMap = map[int]string{
 	8003: "http://0.0.0.0:8003",
 }
 
-var Addrs = []string{
-	// "http://0.0.0.0:8001",
-	// "http://0.0.0.0:8002",
-	// "http://0.0.0.0:8003",
-}
-
 const apiAddr = "127.0.0.1:8080"
 
 func RunCacheServer(serverAddr string, peerAddrs []string, group *gocache.Group) {
@@ -41,7 +35,7 @@ func RunCacheServer(serverAddr string, peerAddrs []string, group *gocache.Group)
 	
 	group.RegisterPeers(peers)
 
-	log.Printf("Cache Server start listening address: %s\n", serverAddr)
+	log.Printf("[rpc]Cache Server start listening address: %s\n", serverAddr)
 	if err := http.ListenAndServe(serverAddr[7:], peers); err != nil {
 		log.Fatal(err)
 	}
@@ -61,12 +55,22 @@ func InitGroup() *gocache.Group {
 }
 
 func CacheServerMain() {
+	var Addrs = []string{
+		// "http://0.0.0.0:8001",
+		// "http://0.0.0.0:8002",
+		// "http://0.0.0.0:8003",
+	}
+
 	portStr := os.Getenv("PORT")
 	port, err := strconv.Atoi(portStr)
 	if err != nil {
 		port = 8001
 	}
-	isAPI := true
+	API := os.Getenv("API")
+	isAPI, err := strconv.ParseBool(API)
+	if err != nil {
+		isAPI = false
+	}
 
 	g := InitGroup()
 

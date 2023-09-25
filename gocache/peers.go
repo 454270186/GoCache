@@ -1,13 +1,15 @@
 package gocache
 
+import pb "github.com/454270186/GoCache/gocache/gocachepb/gocachepb"
+
 type PeerPicker interface {
 	PickPeer(key string) (peerGetter PeerGetter, peerPutter PeerPutter, ok bool)
 }
 
 type PeerGetter interface {
-	Get(group, key string) (string, error)
+	Get(in *pb.GetRequest, out *pb.GetResponse) error
 }
 
 type PeerPutter interface {
-	Put(group, key, val string) error
+	Put(in *pb.PutRequest, out *pb.PutResponse) error
 }

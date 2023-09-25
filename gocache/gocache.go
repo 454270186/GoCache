@@ -5,6 +5,7 @@ import (
 	"log"
 	"sync"
 
+	pb "github.com/454270186/GoCache/gocache/gocachepb/gocachepb"
 	"github.com/454270186/GoCache/gocache/singleflight"
 )
 
@@ -69,7 +70,7 @@ func (g *Group) Put(key, val string) error {
 		g.populateCache(key, val)
 	} else {
 		if _, peer, ok := g.peers.PickPeer(key); ok {
-			err := peer.Put(g.name, key, val)
+			err := g.putToPeer(peer, key, val)
 			if err != nil {
 				log.Println("error while put data to peer:", err.Error())
 				return err
@@ -111,7 +112,7 @@ func (g *Group) load(key string) (string, error) {
 	v, err := g.loader.Do(key, func() (interface{}, error) {
 		if g.peers != nil {
 			if peer, _, ok := g.peers.PickPeer(key); ok {
-				v, err := peer.Get(g.name, key)
+				v, err := g.getFromPeer(peer, key)
 				if err == nil {
 					return v, nil
 				}
@@ -144,11 +145,38 @@ func (g *Group) getLocally(key string) (string, error) {
 }
 
 func (g *Group) getFromPeer(peer PeerGetter, key string) (string, error) {
-	return "to be done", nil
+	req := &pb.GetRequest{
+		Group: g.name,
+		Key: key,
+	}
+	res := &pb.GetResponse{}
+
+	err := peer.Get(req, res)
+	if err != nil {
+		return "", err
+	}
+	
+	return res.Value, nil
 }
 
 //Add K-V
 // populateCache() add a K-V in local cache
 func (g *Group) populateCache(key, val string) {
 	g.mainCache.add(key, val)
+}
+
+func (g *Group) putToPeer(peer PeerPutter, key, val string) error {
+	req := &pb.PutRequest{
+		Group: g.name,
+		Key: key,
+		Value: val,
+	}
+	res := &pb.PutResponse{}
+
+	err := peer.Put(req, res)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

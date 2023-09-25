@@ -10,6 +10,8 @@ import (
 	"sync"
 
 	"github.com/454270186/GoCache/gocache/consistenthash"
+	pb "github.com/454270186/GoCache/gocache/gocachepb/gocachepb"
+	"google.golang.org/protobuf/proto"
 )
 
 const (
@@ -74,8 +76,15 @@ func (p *HTTPPool) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		// Decode response into protobuf
+		body, err := proto.Marshal(&pb.GetResponse{Value: val})
+		if err != nil {
+			http.Error(w, fmt.Sprintf("[Error] Decode failed"), http.StatusInternalServerError)
+			return
+		}
+
 		w.Header().Set("Content-Type", "octet-stream")
-		w.Write([]byte(val))
+		w.Write(body)
 	case "POST":
 		url := r.URL.Path
 		parts := strings.Split(url, "/")
@@ -135,43 +144,47 @@ type httpGetter struct {
 }
 
 // Get() is the HTTP Client for getting value from remote peer
-func (h *httpGetter) Get(group, key string) (string, error) {
+func (h *httpGetter) Get(in *pb.GetRequest, out *pb.GetResponse) error {
 	peerURL := fmt.Sprintf(
 		"%v%v/%v",
 		h.baseURL,
-		url.QueryEscape(group),
-		url.QueryEscape(key),
+		url.QueryEscape(in.GetGroup()),
+		url.QueryEscape(in.GetKey()),
 	)
 
 	resp, err := http.Get(peerURL)
 	if err != nil {
-		return "", err
+		return err
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return "", fmt.Errorf("Server return %s", resp.Status)
+		return fmt.Errorf("Server return %s", resp.Status)
 	}
 
 	bytes, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return "", fmt.Errorf("error while reading resp body: %v", err)
+		return fmt.Errorf("error while reading resp body: %v", err)
 	}
 
-	return string(bytes), nil
+	if err := proto.Unmarshal(bytes, out); err != nil {
+		return fmt.Errorf("error while decoding resp body: %v", err)
+	}
+
+	return nil
 }
 
 type httpPutter struct {
 	baseURL string // the address of remote peer
 }
 
-func (h *httpPutter) Put(group, key, val string) error {
+func (h *httpPutter) Put(in *pb.PutRequest, out *pb.PutResponse) error {
 	peerURL := fmt.Sprintf(
 		"%v%v/%v/%v",
 		h.baseURL,
-		url.QueryEscape(group),
-		url.QueryEscape(key),
-		url.QueryEscape(val),
+		url.QueryEscape(in.GetGroup()),
+		url.QueryEscape(in.GetKey()),
+		url.QueryEscape(in.GetValue()),
 	)
 
 	resp, err := http.Post(peerURL, "", nil)
@@ -183,6 +196,15 @@ func (h *httpPutter) Put(group, key, val string) error {
 	if resp.StatusCode != http.StatusOK {
 		return fmt.Errorf("Server return %s", resp.Status)
 	}
+
+	// bytes, err := io.ReadAll(resp.Body)
+	// if err != nil {
+	// 	return fmt.Errorf("error while reading resp body: %v", err)
+	// }
+
+	// if err := proto.Unmarshal(bytes, out); err != nil {
+	// 	return fmt.Errorf("error while decoding resp body: %v", err)
+	// }
 
 	return nil
 }

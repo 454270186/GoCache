@@ -4,7 +4,7 @@ a simple distributed cache
 ### Features
 - 实现LRU缓存淘汰算法，有效利用内存，提高缓存命中率
 - 实现一致性哈希环，提高了节点的均匀性和可拓展性
-- 多节点间基于HTTP进行通信，实现缓存节点的水平拓展
+- 多节点间基于HTTP, 使用protobuf进行通信
 - 使用singleflight合并高并发的相同请求，防止缓存击穿
 - 支持docker水平部署节点
 
@@ -12,7 +12,7 @@ a simple distributed cache
 ```bash
 docker pull erfeiyu/go-cache
 
-docker run -e PORT=8002 -p 8002:8002 erfeiyu/go-cache  # run a cache node in http://0.0.0.0:8002
+docker run -e PORT=8002 -p 8002:8002 erfeiyu/go-cache:protobuf  # run a cache node in http://0.0.0.0:8002
 ```
 
 ### Usage

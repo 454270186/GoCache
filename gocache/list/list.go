@@ -1,6 +1,20 @@
 package list
 
-import "fmt"
+import (
+	"fmt"
+	"time"
+)
+
+type HeatGroup uint
+
+const (
+	Old   HeatGroup = 0
+	Young HeatGroup = 1
+)
+
+const (
+	BlockOldInterval = 3 * time.Second
+)
 
 type List struct {
 	head *Element
@@ -12,6 +26,9 @@ type Element struct {
 	Key       string
 	Val       string
 	Pre, Next *Element
+
+	Heat    HeatGroup
+	LastVis time.Time
 }
 
 func New() *List {
@@ -73,7 +90,7 @@ func (l *List) Print() {
 	cur := l.head.Next
 
 	for cur != l.tail {
-		fmt.Print("<", cur.Key,", ", cur.Val, ">")
+		fmt.Print("<", cur.Key, ", ", cur.Val, ">")
 		fmt.Print(" ")
 		cur = cur.Next
 	}

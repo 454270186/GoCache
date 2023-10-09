@@ -56,9 +56,9 @@ func InitGroup() *gocache.Group {
 
 func CacheServerMain() {
 	var Addrs = []string{
-		// "http://0.0.0.0:8001",
-		// "http://0.0.0.0:8002",
-		// "http://0.0.0.0:8003",
+		"http://0.0.0.0:8001",
+		"http://0.0.0.0:8002",
+		"http://0.0.0.0:8003",
 	}
 
 	portStr := os.Getenv("PORT")

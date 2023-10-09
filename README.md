@@ -2,7 +2,7 @@
 a simple distributed cache
 
 ### Features
-- 实现LRU缓存淘汰算法，有效利用内存，提高缓存命中率
+- 实现LRU缓存淘汰算法，并对数据进行冷热分区，提高缓存命中率
 - 实现一致性哈希环，提高了节点的均匀性和可拓展性
 - 多节点间基于HTTP, 使用protobuf进行通信
 - 使用singleflight合并高并发的相同请求，防止缓存击穿

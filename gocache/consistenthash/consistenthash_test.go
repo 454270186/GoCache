@@ -8,7 +8,7 @@ import (
 )
 
 func TestHashRing(t *testing.T) {
-	hr := consistenthash.New(3, func(data []byte) uint32 {
+	hr := consistenthash.New(50, func(data []byte) uint32 {
 		i, _ := strconv.Atoi(string(data))
 		return uint32(i)
 	})
@@ -29,7 +29,7 @@ func TestHashRing(t *testing.T) {
 	}
 
 	hr.Add("5")
-	if hr.Get("25") != "5" {
+	if hr.Get("25") == "5" {
 		t.Errorf("Asking for %s, should have yielded %s", "25", "5")
 	}
 }

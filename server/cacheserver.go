@@ -29,12 +29,37 @@ var AddrMap = map[int]string{
 
 const apiAddr = "127.0.0.1:8080"
 
+var (
+	ISAPI bool
+	PORT int
+)
+
+func init() {
+	var err error
+
+	portStr := os.Getenv("PORT")
+	PORT, err = strconv.Atoi(portStr)
+	if err != nil {
+		PORT = 8001
+	}
+	API := os.Getenv("API")
+	ISAPI, err = strconv.ParseBool(API)
+	if err != nil {
+		ISAPI = false
+	}
+}
+
 func RunCacheServer(serverAddr string, peerAddrs []string, group *gocache.Group) {
 	peers := gocache.NewHTTPPool(serverAddr)
 	peers.Set(peerAddrs...)
 	
 	group.RegisterPeers(peers)
 
+	// Async health check
+	if ISAPI {
+		peers.StartHealthCheck()
+	}
+	
 	log.Printf("[rpc]Cache Server start listening address: %s\n", serverAddr)
 	if err := http.ListenAndServe(serverAddr[7:], peers); err != nil {
 		log.Fatal(err)
@@ -61,21 +86,10 @@ func CacheServerMain() {
 		"http://0.0.0.0:8003",
 	}
 
-	portStr := os.Getenv("PORT")
-	port, err := strconv.Atoi(portStr)
-	if err != nil {
-		port = 8001
-	}
-	API := os.Getenv("API")
-	isAPI, err := strconv.ParseBool(API)
-	if err != nil {
-		isAPI = false
-	}
-
 	g := InitGroup()
 
-	if isAPI {
+	if ISAPI {
 		go RunAPIServer(apiAddr, g)
 	}
-	RunCacheServer(AddrMap[port], Addrs, g)
+	RunCacheServer(AddrMap[PORT], Addrs, g)
 }

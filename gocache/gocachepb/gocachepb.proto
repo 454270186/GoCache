@@ -24,7 +24,16 @@ message PutResponse {
     int32 StatusCode = 1;
 }
 
+message Ping {
+    int32 PingCode = 1;
+}
+
+message Pong {
+    int32 PongCode = 1;
+}
+
 service GoCache {
     rpc Get (GetRequest) returns (GetResponse);
     rpc Put (PutRequest) returns (PutResponse);
+    rpc HeartBeat (Ping) returns (Pong);
 }

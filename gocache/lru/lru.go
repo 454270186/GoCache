@@ -31,12 +31,7 @@ func New(maxBytes int64, onDelete func(key string, val string)) *Cache {
 }
 
 func (c *Cache) Get(Key string) (string, bool) {
-	if ele, ok := c.cache[Key]; !ok {
-		if ele.Heat == list.Old {
-			fmt.Printf("key %v is in old\n", ele.Key)
-		} else {
-			fmt.Printf("key %v is in young\n", ele.Key)
-		}
+	if _, ok := c.cache[Key]; !ok {
 		return "", false
 	}
 

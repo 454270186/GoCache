@@ -1,6 +1,7 @@
 package gocache
 
 import (
+	"bytes"
 	"fmt"
 	"io"
 	"log"
@@ -8,6 +9,7 @@ import (
 	"net/url"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/454270186/GoCache/gocache/consistenthash"
 	pb "github.com/454270186/GoCache/gocache/gocachepb/gocachepb"
@@ -16,7 +18,10 @@ import (
 
 const (
 	DefaultBasePath = "/_gocache/"
+	HealthCheckPath = "/_check/"
 	DefaultReplicas = 50
+
+	HealthCheckInterval = 4 * time.Second
 )
 
 var _ PeerPicker = (*HTTPPool)(nil)
@@ -26,6 +31,7 @@ type HTTPPool struct {
 	basePath    string
 	mu          sync.Mutex
 	peers       *consistenthash.HashRing // <data_key, peer_addr>
+	peersAddrs []string
 	httpGetters map[string]*httpGetter   // <peer_addr, the_Get()>
 	httpPutters map[string]*httpPutter   // <peer_addr, the_Put()>
 }
@@ -43,12 +49,46 @@ func (p *HTTPPool) Log(format string, v ...interface{}) {
 	log.Printf("[Server %s] %s\n", p.selfAddr, fmt.Sprintf(format, v...))
 }
 
-// Get: /<BASEPATH>/<GroupName>/<Key>
-// Put: /<BASEPATH>/<GroupName>/<Key>/<Val>
+// Get: 		/<BASEPATH>/<GroupName>/<Key>
+// Put: 		/<BASEPATH>/<GroupName>/<Key>/<Val>
+// HealthCheck: /<HealthCheck_PATH>/
 func (p *HTTPPool) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if !strings.HasPrefix(r.URL.Path, DefaultBasePath) {
-		http.Error(w, "[Error] bad base path", http.StatusNotFound)
-		return
+		if !strings.HasPrefix(r.URL.Path, HealthCheckPath) {
+			http.Error(w, "[Error] bad base path", http.StatusNotFound)
+			return
+		} else {
+			p.Log("[HealthCheck] %s", p.selfAddr)
+			
+			bytes, err := io.ReadAll(r.Body)
+			if err != nil {
+				http.Error(w, err.Error(), 500)
+				return
+			}
+
+			var ping pb.Ping
+			if err := proto.Unmarshal(bytes, &ping); err != nil {
+				http.Error(w, err.Error(), 500)
+				return
+			}
+
+			if ping.PingCode == 1 {
+				// ping for checking health
+				pong := pb.Pong{
+					PongCode: 1,
+				}
+				pongResp, err := proto.Marshal(&pong)
+				if err != nil {
+					http.Error(w, err.Error(), 500)
+					return
+				}
+
+				w.Header().Set("Content-Type", "octet-stream")
+				w.Write(pongResp)
+			}
+
+			return
+		}
 	}
 
 	p.Log("%s %s", r.Method, r.URL.Path)
@@ -116,6 +156,8 @@ func (h *HTTPPool) Set(addrs ...string) {
 	h.mu.Lock()
 	defer h.mu.Unlock()
 
+	h.peersAddrs = addrs
+
 	h.peers = consistenthash.New(DefaultReplicas, nil)
 	h.peers.Add(addrs...)
 	for _, addr := range addrs {
@@ -135,6 +177,70 @@ func (h *HTTPPool) PickPeer(key string) (peerGetter PeerGetter, peerPutter PeerP
 	}
 
 	return nil, nil, false
+}
+
+func (h *HTTPPool) StartHealthCheck() {
+	go func ()  {
+		ticker := time.NewTicker(HealthCheckInterval)
+		defer ticker.Stop()
+		
+		for {
+			select {
+			case <- ticker.C:
+				h.HealthCheck()
+			}
+		}
+	}()
+}
+
+func (h *HTTPPool) HealthCheck() {
+	for _, peerAddr := range h.peersAddrs {
+		log.Printf("[CheckHealth] Check %v\n", peerAddr)
+
+		ping := pb.Ping{
+			PingCode: 1,
+		}
+
+		pingBody, err := proto.Marshal(&ping)
+		if err != nil {
+			log.Printf("[Error] %v\n", err.Error())
+			return
+		}
+
+		pingBodyBuffer := bytes.NewBuffer(pingBody)
+		resp, err := http.Post(peerAddr+HealthCheckPath, "", pingBodyBuffer)
+		if err != nil {
+			log.Printf("[Error] %v\n", err.Error())
+			return
+		}
+		defer resp.Body.Close()
+
+		if resp.StatusCode != http.StatusOK {
+			log.Printf("[Unhealthy] peer %v\n", peerAddr)
+			h.peers.Remove(peerAddr)
+			log.Printf("[Unhealthy] remove peer %v\n", peerAddr)
+			continue
+		}
+		
+		bytes, err := io.ReadAll(resp.Body)
+		if err != nil {
+			log.Printf("[Error] error while read resp body: %v\n", err.Error())
+			return
+		}
+
+		var pong pb.Pong
+		if err := proto.Unmarshal(bytes, &pong); err != nil {
+			log.Printf("[Error] error while unmarshal protobuf: %v\n", err.Error())
+			return
+		}
+
+		if pong.PongCode != 1 {
+			log.Printf("[Unhealthy] peer %v\n", peerAddr)
+			h.peers.Remove(peerAddr)
+			log.Printf("[Unhealthy] remove peer %v\n", peerAddr)
+			continue
+		}
+	}
 }
 
 var _ PeerGetter = (*httpGetter)(nil)
